@@ -1,75 +1,154 @@
 #!/bin/sh
-curl -O http://nongnu.askapache.com/freetype/freetype-2.3.9.tar.gz
-tar xzvf freetype-2.3.9.tar.gz
-cd freetype-2.3.9
-./configure --prefix=/usr/local
+
+# Installs ImageMagick and all dependencies from source on snow leopard
+# requires wget to be installed.
+# Please download and install wget from http://www.gnu.org/software/wget/ before running this script
+
+# ===== setup some global variables =====
+
+# directory to install ImageMagick and dependencies
+PREFIX=/opt
+
+# directory to use for source building. Leave as /usr/local/src if unsure
+BUILD_DIR=/usr/local/src
+
+# make sure sub-directory structure of target install directory is in $PATH, so
+# configure scripts will easily find dependencies
+export PATH=$PREFIX/bin:$PREFIX/lib:$PREFIX/include:$PATH
+
+# ===== prepare or enter build directory =====
+if [ -d $BUILD_DIR ]; then
+	cd $BUILD_DIR
+else
+	mkdir -p $BUILD_DIR
+	cd $BUILD_DIR
+fi
+
+# ===== begin installation =====
+
+# install freetype
+echo 'installing freetype'
+if [ -d freetype-2.3.9 ]; then
+	cd freetype-2.3.9
+	make clean
+else
+	wget http://sourceforge.net/projects/freetype/files/freetype2/2.3.9/freetype-2.3.9.tar.gz/download -O- | tar xz
+	cd freetype-2.3.9
+fi
+./configure --prefix=$PREFIX
 make
-sudo make install
+make install
 cd ..
 
-curl -O http://surfnet.dl.sourceforge.net/project/libpng/00-libpng-stable/1.2.39/libpng-1.2.39.tar.gz
-tar xzvf libpng-1.2.39.tar.gz
-cd libpng-1.2.39
-./configure --prefix=/usr/local
+# install libpng
+echo 'installing libpng'
+if [ -d libpng-1.2.40 ]; then
+	cd libpng-1.2.40
+	make clean
+else
+	wget http://downloads.sourceforge.net/project/libpng/00-libpng-stable/1.2.40/libpng-1.2.40.tar.gz?use_mirror=garr -O- | tar xj
+	cd libpng-1.2.40
+fi
+./configure --prefix=$PREFIX
 make
-sudo make install
+make install
 cd ..
 
-curl -O http://www.ijg.org/files/jpegsrc.v7.tar.gz
-tar xzvf jpegsrc.v7.tar.gz
-cd jpeg-7
-ln -s `which glibtool` ./libtool
+# install jpeg
+echo 'installing jpeg'
+if [ -d jpeg-7 ]; then
+	cd jpeg-7
+	make clean
+else 
+	wget http://www.ijg.org/files/jpegsrc.v7.tar.gz -O- | tar xz
+	cd jpeg-7
+	ln -sf `which glibtool` ./libtool
+fi
 export MACOSX_DEPLOYMENT_TARGET=10.5
-./configure --enable-shared --prefix=/usr/local
+./configure --enable-shared --prefix=$PREFIX
 make
-sudo make install
+make install
 cd ..
 
-curl -O ftp://ftp.remotesensing.org/libtiff/tiff-3.8.2.tar.gz
-tar xzvf tiff-3.8.2.tar.gz
-cd tiff-3.8.2
-./configure --prefix=/usr/local
+# install libtiff
+
+echo 'installing tiff'
+if [ -d tiff-3.8.2 ]; then
+	cd tiff-3.8.2
+	make clean
+else
+	wget http://dl.maptools.org/dl/libtiff/tiff-3.8.2.tar.gz -O- | tar xz
+	cd tiff-3.8.2
+fi
+./configure --prefix=$PREFIX
 make
-sudo make install
+make install
 cd ..
 
-curl -O http://voxel.dl.sourceforge.net/project/wvware/libwmf/0.2.8.4/libwmf-0.2.8.4.tar.gz
-tar xzvf libwmf-0.2.8.4.tar.gz
-cd libwmf-0.2.8.4
-make clean
-./configure
+# install libwmf
+echo 'installing libwmf'
+if [ -d libwmf-0.2.8.4 ]; then
+	cd libwmf-0.2.8.4
+	make clean
+else
+	wget http://sourceforge.net/projects/wvware/files/libwmf/0.2.8.4/libwmf-0.2.8.4.tar.gz/download -O- | tar xz
+	cd libwmf-0.2.8.4
+fi
+./configure --prefix=$PREFIX --with-png=$PREFIX --with-jpeg=$PREFIX --with-freetype=$PREFIX
 make
-sudo make install
+make install
 cd ..
 
-curl -O http://www.littlecms.com/lcms-1.17.tar.gz
-tar xzvf lcms-1.17.tar.gz
-cd lcms-1.17
-make clean
-./configure
+# install lcms
+echo 'installing lcms'
+if [ -d lcms-1.18 ]; then
+	cd lcms-1.18
+	make clean
+else
+	wget http://www.littlecms.com/lcms-1.18a.tar.gz -O- | tar xz
+	cd lcms-1.18
+fi
+./configure --prefix=$PREFIX
 make
-sudo make install
+make install
 cd ..
 
-curl -O http://voxel.dl.sourceforge.net/project/ghostscript/GPL%20Ghostscript/8.70/ghostscript-8.70.tar.gz
-tar zxvf ghostscript-8.70.tar.gz
-cd ghostscript-8.70/
-./configure  --prefix=/usr/local
+# install ghostscript and fonts
+echo 'installing ghostscript and ghostfonts'
+if [ -d ghostscript-8.70 ]; then
+	cd ghostscript-8.70
+	make clean
+else 
+	wget http://ghostscript.com/releases/ghostscript-8.70.tar.gz -O- | tar xz
+	cd ghostscript-8.70
+fi
+./configure --prefix=$PREFIX
 make
-sudo make install
+make install
 cd ..
 
-curl -O http://voxel.dl.sourceforge.net/project/gs-fonts/gs-fonts/8.11%20%28base%2035%2C%20GPL%29/ghostscript-fonts-std-8.11.tar.gz
-tar zxvf ghostscript-fonts-std-8.11.tar.gz
-sudo mv fonts /usr/local/share/ghostscript
+if [ -d $PREFIX/share/ghostscript ]; then
+	echo 'ghostscript fonts already exist'
+else
+	wget http://sourceforge.net/projects/gs-fonts/files/gs-fonts/8.11%20%28base%2035%2C%20GPL%29/ghostscript-fonts-std-8.11.tar.gz/download -O- | tar xz
+	mv fonts $PREFIX/share/ghostscript
+fi
 
-curl -O http://image_magick.veidrodis.com/image_magick/ImageMagick-6.5.6-1.tar.gz
-tar xzvf ImageMagick-6.5.6-1.tar.gz
-cd ImageMagick-6.5.6-1
-export CPPFLAGS=-I/usr/local/include
-export LDFLAGS=-L/usr/local/lib
-./configure --prefix=/usr/local --disable-static --with-modules --without-perl --without-magick-plus-plus --with-quantum-depth=8 --with-gs-font-dir=/usr/local/share/ghostscript/fonts
+# install ImageMagick
+# note ImageMagick is compiled with  --disable-openmp to fix SEGFAULT in Snow Leopard
+# you can remove this flag if compiling on Leopard
+echo 'installing ImageMagick'
+if [ -d ImageMagick-6.5.8-0 ]; then
+	cd ImageMagick-6.5.8-0
+	make clean
+else
+	wget http://image_magick.veidrodis.com/image_magick/ImageMagick-6.5.8-0.tar.gz -O- | tar xz
+	cd ImageMagick-6.5.8-0
+fi
+export CPPFLAGS=-I$PREFIX/include
+export LDFLAGS=-L$PREFIX/lib
+./configure --prefix=$PREFIX --disable-static --with-modules --without-perl --without-magick-plus-plus --with-quantum-depth=8 --disable-openmp --with-gs-font-dir=$PREFIX/share/ghostscript/fonts
 make
-sudo make install
-cd ..
+make install
 
+rm ./libtool
