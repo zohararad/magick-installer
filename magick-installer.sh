@@ -1,4 +1,5 @@
 #!/bin/sh
+set -e
 
 # Installs ImageMagick and all dependencies from source on snow leopard
 # requires wget to be installed.
